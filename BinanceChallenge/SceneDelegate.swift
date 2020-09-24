@@ -9,7 +9,8 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         
         window = UIWindow(frame: windowScene.coordinateSpace.bounds)
         window?.windowScene = windowScene
-        window?.rootViewController = ViewController()
+        let store = Store()
+        window?.rootViewController = ViewController(store: store)
         window?.makeKeyAndVisible()
     }
 }

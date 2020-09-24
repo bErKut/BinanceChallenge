@@ -5,6 +5,26 @@ struct Record {
     let ask: Order
 }
 
+extension Record: Hashable {
+    static func == (lhs: Record, rhs: Record) -> Bool {
+        return lhs.ask == rhs.ask && lhs.bid == rhs.bid
+    }
+}
+
+struct HistoryRecord {
+    let time: String
+    let price: String
+    let quantity: String
+}
+
+extension HistoryRecord: Hashable {
+    static func == (lhs: HistoryRecord, rhs: HistoryRecord) -> Bool {
+        return lhs.time == rhs.time &&
+            lhs.price == rhs.price &&
+            lhs.quantity == rhs.quantity
+    }
+}
+
 class Store: NSObject {
     private enum Const {
         static let processingQueue = "com.berkut89.binancechallenge.store"

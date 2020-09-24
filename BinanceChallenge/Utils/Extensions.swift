@@ -1,4 +1,4 @@
-import Foundation
+import UIKit
 
 extension Encodable {
     var asJSONString: String {
@@ -30,18 +30,15 @@ extension Data {
     }
 }
 
-//func decode<T: Decodable>(string: String) -> T {
-//    guard let jsonData = string.data(using: .utf8) else {
-//        fatalError("Could not create data from string")
-//    }
-//    return decode(data: jsonData)
-//}
+extension UILabel {
+    convenience init(text: String?) {
+        self.init(frame: .zero)
+        self.text = text
+    }
+}
 
-//func decode<T: Decodable>(data: Data) -> T {
-//    let decoder = JSONDecoder()
-//    guard let result = try? decoder.decode(T.self, from: data) else {
-//        fatalError("Could not decode json data to expected structure")
-//    }
-//    return result
-//}
-
+extension Array where Element: NSLayoutConstraint {
+    func activate() {
+        NSLayoutConstraint.activate(self)
+    }
+}

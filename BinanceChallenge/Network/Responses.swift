@@ -22,7 +22,7 @@ struct DepthSnapshot: Codable {
     let lastUpdateId: Int
 }
 
-struct Order: Codable {
+struct Order: Codable, Hashable {
     let quantity: Double
     let price: Double
 }
