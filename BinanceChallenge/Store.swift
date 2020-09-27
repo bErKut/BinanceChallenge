@@ -1,8 +1,8 @@
 import Foundation
 
 struct Record {
-    let bid: Order
-    let ask: Order
+    let bid: Order?
+    let ask: Order?
 }
 
 extension Record: Hashable {
@@ -15,19 +15,23 @@ struct HistoryRecord {
     let time: String
     let price: String
     let quantity: String
+    private let uuid = UUID()
 }
 
 extension HistoryRecord: Hashable {
-    static func == (lhs: HistoryRecord, rhs: HistoryRecord) -> Bool {
-        return lhs.time == rhs.time &&
-            lhs.price == rhs.price &&
-            lhs.quantity == rhs.quantity
+    static func ==(lhs: HistoryRecord, rhs: HistoryRecord) -> Bool {
+        return lhs.uuid == rhs.uuid
+    }
+    
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(uuid)
     }
 }
 
-class Store: NSObject {
+class Store {
     private enum Const {
         static let processingQueue = "com.berkut89.binancechallenge.store"
+        static let historyRecordsMaxCount = 14
     }
     
     private enum Symbol: String {
@@ -36,13 +40,23 @@ class Store: NSObject {
     
     private var lastUpdateID: Int?
     private var lastDepthResponse: DepthResponse?
+    private var historyRecords: [HistoryRecord] = []
+    private var histiryRecordsMaxCapacity = Const.historyRecordsMaxCount
         
-    var networker: Networker!
-    var processingQueue: OperationQueue {
+    private var networker: Networker!
+    private var processingQueue: OperationQueue {
         let operationQueue = OperationQueue()
         operationQueue.maxConcurrentOperationCount = 1
         operationQueue.name = Const.processingQueue
         return operationQueue
+    }
+    private let callbackQueue: OperationQueue
+    
+    var orderBookCallback: ((Result<[Record], Error>) -> Void)?
+    var marketHistoryCallback: ((Result<[HistoryRecord], Error>) -> Void)?
+    
+    init(callbackQueue: OperationQueue = .main) {
+        self.callbackQueue = callbackQueue
     }
     
     func start() {
@@ -92,40 +106,69 @@ private extension Store {
     }
     
     private func handleDepth(response: DepthResponse) {
-        guard let lastUpdateID = lastUpdateID else {
-            print("nothig to campare against")
+        guard let lastUpdateID = lastUpdateID,
+            response.u > lastUpdateID else {
             return
         }
         
         // TODO: refactor
-        if response.u > lastUpdateID  {
-            if let lastResponse = lastDepthResponse,
-                lastResponse.u + 1 == response.U {
-                    // all subsequent events, except first
-            } else if response.U <= lastUpdateID + 1,
-                response.u >= lastUpdateID + 1 {
-                    // handle case for first event
-            } else {
-                resync()
-                return
-            }
-            
+        if let lastResponse = lastDepthResponse,
+            lastResponse.u + 1 == response.U {
+                // all subsequent events, except first
+        } else if response.U <= lastUpdateID + 1,
+            response.u >= lastUpdateID + 1 {
+                // handle case for first event
+        } else {
+            resync()
             lastDepthResponse = response
-            
-                
-            // The first processed event should have U <= lastUpdateId+1 AND u >= lastUpdateId+1.
-            //   "U": 157,           // First update ID in event
-            //   "u": 160,           // Final update ID in event
+            return
         }
-
-//        print(response)
+        
+        lastDepthResponse = response
+        
+        var records: [Record] = []
+        for i in 0..<max(response.asks.count, response.bids.count) {
+            var bidOrder: Order?
+            var askOrder: Order?
+            if i < response.bids.count {
+                bidOrder = response.bids[i]
+            }
+            if i < response.asks.count {
+                askOrder = response.asks[i]
+            }
+            records.append(Record(bid: bidOrder, ask: askOrder))
+        }
+        
+        callbackQueue.addOperation { [weak self] in
+            self?.orderBookCallback?(.success(records))
+        }
     }
     
     private func handleAggTrade(answer: AggregatedTrade) {
-//        print(answer)
+        let formatter = DateComponentsFormatter()
+        formatter.allowedUnits = [.hour, .minute, .second]
+        formatter.unitsStyle = .positional
+        let date = Date(timeIntervalSince1970: TimeInterval(answer.T/1_000))
+        let components = Calendar.current.dateComponents([.hour, .minute, .second], from: date)
+        guard let timeString = formatter.string(from: components) else { return }
+        let record = HistoryRecord(time: timeString,
+                                   price: answer.p,
+                                   quantity: answer.q)
+        
+        var records = historyRecords
+        records.insert(record, at: 0)
+        if records.count > histiryRecordsMaxCapacity {
+            records = records.dropLast()
+        }
+        historyRecords = records
+        
+        callbackQueue.addOperation { [weak self] in
+            self?.marketHistoryCallback?(.success(records))
+        }
     }
     
     private func resync() {
+        print("resync")
          // TODO
     }
 }

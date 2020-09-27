@@ -3,8 +3,8 @@ import UIKit
 class ViewController: UIViewController {
     
     private let store: Store
-    private let segmentedControl = UISegmentedControl(items: [Strings.orderBook,
-                                                              Strings.marketHistory])
+    private let segmentedControl = SegmentedControl(items: [Strings.orderBook,
+                                                            Strings.marketHistory])
     private let contentView = UIView()
     private let contentViewController = UIPageViewController(transitionStyle: .scroll,
                                                              navigationOrientation: .horizontal,
@@ -33,9 +33,7 @@ class ViewController: UIViewController {
                                    action: #selector(onSegment(_:)),
                                    for: .valueChanged)
         view.addSubview(contentView)
-        
         configureUI()
-        
         let _ = store.start()
     }
     
@@ -48,22 +46,9 @@ class ViewController: UIViewController {
         .lightContent
     }
     
-    @objc private func onSegment(_ segmentedControl: UISegmentedControl) {
-        let selectedTitle = segmentedControl.titleForSegment(at: segmentedControl.selectedSegmentIndex)!
-        let controller: UIViewController
-        let direction: UIPageViewController.NavigationDirection
-        
-        switch selectedTitle {
-        case Strings.orderBook:
-            controller = orderBookController
-            direction = .reverse
-        case Strings.marketHistory:
-            controller = marketHistoryController
-            direction = .forward
-        default:
-            return
-        }
-        
+    @objc private func onSegment(_ sc: UISegmentedControl) {
+        let controller = pages[sc.selectedSegmentIndex]
+        let direction: UIPageViewController.NavigationDirection = sc.selectedSegmentIndex > 0 ? .forward : .reverse
         contentViewController.setViewControllers([controller],
                                                  direction: direction,
                                                  animated: true,
@@ -79,26 +64,14 @@ private extension ViewController {
     }
     
     private enum Const {
-        static let segmentedControlWidth: CGFloat = 44
+        static let segmentedControlHeight: CGFloat = 44
     }
 
     func configureUI() {
-        configureSegmentedControl()
-        configureContentView()
         positionElements()
         installPageViewController()
     }
-    
-    func configureSegmentedControl() {
-        segmentedControl.backgroundColor = .lightGray
-        // TODO: tune appearence
-    }
-    
-    func configureContentView() {
-        contentView.backgroundColor = .cyan
-        // TODO: tune appearence
-    }
-    
+        
     func positionElements() {
         segmentedControl.translatesAutoresizingMaskIntoConstraints = false
         contentView.translatesAutoresizingMaskIntoConstraints = false
@@ -106,7 +79,7 @@ private extension ViewController {
         [segmentedControl.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor),
          segmentedControl.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
          segmentedControl.widthAnchor.constraint(equalTo: view.widthAnchor),
-         segmentedControl.heightAnchor.constraint(equalToConstant: Const.segmentedControlWidth),
+         segmentedControl.heightAnchor.constraint(equalToConstant: Const.segmentedControlHeight),
                            
          contentView.leadingAnchor.constraint(equalTo: segmentedControl.leadingAnchor),
          contentView.topAnchor.constraint(equalTo: segmentedControl.bottomAnchor),
@@ -120,11 +93,8 @@ private extension ViewController {
         addChild(contentViewController)
         contentViewController.didMove(toParent: self)
         contentViewController.dataSource = self
-        contentViewController.view.backgroundColor = .yellow
-        
-        orderBookController.view.backgroundColor = .red
-        marketHistoryController.view.backgroundColor = .green
-        
+        contentViewController.delegate = self
+                
         contentViewController.setViewControllers([orderBookController],
                                                  direction: .forward,
                                                  animated: true,
@@ -134,13 +104,32 @@ private extension ViewController {
 
 // MARK: UIPageViewControllerDataSource
 extension ViewController: UIPageViewControllerDataSource {
-    func pageViewController(_ pageViewController: UIPageViewController, viewControllerBefore viewController: UIViewController) -> UIViewController? {
+    func pageViewController(_ pageViewController: UIPageViewController,
+                            viewControllerBefore viewController: UIViewController) -> UIViewController? {
         guard viewController == marketHistoryController else { return nil }
         return orderBookController
     }
     
-    func pageViewController(_ pageViewController: UIPageViewController, viewControllerAfter viewController: UIViewController) -> UIViewController? {
+    func pageViewController(_ _: UIPageViewController,
+                            viewControllerAfter viewController: UIViewController) -> UIViewController? {
         guard viewController == orderBookController else { return nil }
         return marketHistoryController
+    }
+}
+
+// MARK: UIPageViewControllerDelegate
+extension ViewController: UIPageViewControllerDelegate {
+    func pageViewController(_ pageViewController: UIPageViewController,
+                            didFinishAnimating _: Bool,
+                            previousViewControllers: [UIViewController],
+                            transitionCompleted _: Bool) {
+        if let controller = pageViewController.viewControllers?.filter({ !previousViewControllers.contains($0) }).first,
+            let index = pages.firstIndex(of: controller) {
+            segmentedControl.selectedSegmentIndex = index
+        }
+    }
+    
+    private var pages: [UIViewController] {
+        [self.orderBookController, self.marketHistoryController]
     }
 }

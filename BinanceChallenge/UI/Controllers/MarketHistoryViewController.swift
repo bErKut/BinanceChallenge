@@ -33,27 +33,30 @@ class MarketHistoryViewController: UIViewController {
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         
-        var snapshot = NSDiffableDataSourceSnapshot<Section, HistoryRecord>()
-        snapshot.appendSections([.history])
-        // TODO: replace fakes
-        let items = [HistoryRecord(time: "15:24:27",
-                                   price: "10,361.10",
-                                   quantity: "0.06032"),
-                     HistoryRecord(time: "15:24:27",
-                                   price: "10,331.10",
-                                   quantity: "0.06032"),
-                     HistoryRecord(time: "15:24:27",
-                                   price: "13,361.10",
-                                   quantity: "0.031")]
-        snapshot.appendItems(items)
-        dataSource.apply(snapshot)
+        store.marketHistoryCallback = { [weak self] result in
+            var snapshot = NSDiffableDataSourceSnapshot<Section, HistoryRecord>()
+            switch result {
+            case let .success(records):
+                snapshot.appendSections([.history])
+                snapshot.appendItems(records)
+            case .failure:
+                snapshot.appendItems([])
+            }
+            self?.dataSource.apply(snapshot, animatingDifferences: false)
+        }
+    }
+    
+    override func viewWillDisappear(_ animated: Bool) {
+        store.marketHistoryCallback = nil
+        
+        super.viewDidDisappear(animated)
     }
 }
 
 extension MarketHistoryViewController {
     private enum Const {
-        static let headerHeight: CGFloat = 44
-        static let cellHeight: CGFloat = 40
+        static let headerHeight: CGFloat = 28
+        static let cellHeight: CGFloat = 28
     }
 
     enum Section: Int {

@@ -13,8 +13,11 @@ class OrderHeaderView: UIView {
     override init(frame: CGRect) {
         super.init(frame: frame)
         
-        let bidLabel = UILabel(text: Strings.bid)
-        let askLabel = UILabel(text: Strings.ask)
+        backgroundColor = .dark
+        let bidLabel = UILabel(text: Strings.bid,
+                               textColor: .pale)
+        let askLabel = UILabel(text: Strings.ask,
+                               textColor: .pale)
         let precisionButton = UIButton(type: .custom)
         precisionButton.backgroundColor = .yellow // TODO: implement
         

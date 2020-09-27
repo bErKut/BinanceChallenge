@@ -23,7 +23,6 @@ class OrderBookViewController: UIViewController {
         super.viewDidLoad()
         
         view.addSubview(header)
-        header.backgroundColor = .green
         
         collectionView.register(OrderRecordCell.self, forCellWithReuseIdentifier: Self.cellId)
         collectionView.dataSource = dataSource
@@ -33,23 +32,35 @@ class OrderBookViewController: UIViewController {
     
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
+            
+        store.orderBookCallback = { [weak self] result in
+            var snapshot = NSDiffableDataSourceSnapshot<Section, Record>()
+
+            switch result {
+            case let .success(records):
+                snapshot.appendSections([.records])
+                snapshot.appendItems(records)
+            case .failure(_):
+                // TODO: reflect in UI
+                snapshot.appendItems([])
+            }
+
+            self?.dataSource.apply(snapshot,
+                                   animatingDifferences: false)
+        }
+    }
+    
+    override func viewWillDisappear(_ animated: Bool) {
+        store.orderBookCallback = nil
         
-        var snapshot = NSDiffableDataSourceSnapshot<Section, Record>()
-        snapshot.appendSections([.records])
-        // TODO: replace fakes
-        let items = [Record(bid: Order(quantity: 0.15, price: 342.21),
-                            ask: Order(quantity: 1.12, price: 795.21)),
-                     Record(bid: Order(quantity: 0.34, price: 42.21),
-                            ask: Order(quantity: 3.12, price: 1795.21))]
-        snapshot.appendItems(items)
-        dataSource.apply(snapshot)
+        super.viewWillDisappear(animated)
     }
 }
 
 private extension OrderBookViewController {
     private enum Const {
-        static let headerHeight: CGFloat = 44
-        static let cellHeight: CGFloat = 40
+        static let headerHeight: CGFloat = 28
+        static let cellHeight: CGFloat = 28
     }
     
     enum Section: Int {
@@ -63,10 +74,18 @@ private extension OrderBookViewController {
             // TODO: configure cell
             cell.backgroundColor = ip.item % 2 == 0 ? .gray : .magenta
             
-            cell.bidQuantity = String(record.bid.quantity)
-            cell.bidPrice = String(record.bid.price)
-            cell.askPrice = String(record.ask.price)
-            cell.askQuantity = String(record.ask.quantity)
+            if let bidQuantity = record.bid?.quantity {
+                cell.bidQuantity = String(bidQuantity)
+            }
+            if let bidPrice = record.bid?.price {
+                cell.bidPrice = String(bidPrice)
+            }
+            if let askPrice = record.ask?.price {
+                cell.askPrice = String(askPrice)
+            }
+            if let askQuantity = record.ask?.quantity {
+                cell.askQuantity = String(askQuantity)
+            }
 
             return cell
         }

@@ -24,6 +24,7 @@
 		A74C1371251C048C00AF452C /* OrderRecordCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = A74C1370251C048C00AF452C /* OrderRecordCell.swift */; };
 		A7B3A718251CC40D0021BCF9 /* HistoryHeaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7B3A717251CC40D0021BCF9 /* HistoryHeaderView.swift */; };
 		A7B3A71A251CC4650021BCF9 /* HistoryCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7B3A719251CC4650021BCF9 /* HistoryCell.swift */; };
+		A7B3A71C251FFD2D0021BCF9 /* SegmentedControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7B3A71B251FFD2D0021BCF9 /* SegmentedControl.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -58,6 +59,7 @@
 		A74C1370251C048C00AF452C /* OrderRecordCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OrderRecordCell.swift; sourceTree = "<group>"; };
 		A7B3A717251CC40D0021BCF9 /* HistoryHeaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryHeaderView.swift; sourceTree = "<group>"; };
 		A7B3A719251CC4650021BCF9 /* HistoryCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryCell.swift; sourceTree = "<group>"; };
+		A7B3A71B251FFD2D0021BCF9 /* SegmentedControl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SegmentedControl.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -155,6 +157,7 @@
 				A74C1370251C048C00AF452C /* OrderRecordCell.swift */,
 				A7B3A717251CC40D0021BCF9 /* HistoryHeaderView.swift */,
 				A7B3A719251CC4650021BCF9 /* HistoryCell.swift */,
+				A7B3A71B251FFD2D0021BCF9 /* SegmentedControl.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -274,6 +277,7 @@
 				A732361F25174AF000D26FFC /* Networker.swift in Sources */,
 				A70A95F4251BE4C800EAA5CD /* MarketHistoryViewController.swift in Sources */,
 				A74C136F251C048300AF452C /* OrderHeaderView.swift in Sources */,
+				A7B3A71C251FFD2D0021BCF9 /* SegmentedControl.swift in Sources */,
 				A74C1371251C048C00AF452C /* OrderRecordCell.swift in Sources */,
 				A7B3A718251CC40D0021BCF9 /* HistoryHeaderView.swift in Sources */,
 				A70A95E82517BB2A00EAA5CD /* WebSocket.swift in Sources */,

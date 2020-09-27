@@ -1,11 +1,3 @@
-//
-//  HistoryCell.swift
-//  BinanceChallenge
-//
-//  Created by Vlad Berkuta on 24.09.2020.
-//  Copyright © 2020 Vlad Berkuta. All rights reserved.
-//
-
 import UIKit
 
 class HistoryCell: UICollectionViewCell {
