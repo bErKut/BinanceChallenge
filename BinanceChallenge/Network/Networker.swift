@@ -57,11 +57,12 @@ class Networker: NSObject {
     init(symbol: Symbol = .btcusdt,
          depthCallback: @escaping depthCallback,
          aggTradeCallback: @escaping aggTradeCallback,
-         callbackQueue: OperationQueue = OperationQueue.main) {
+         callbackQueue: OperationQueue = OperationQueue.main,
+         baseURL: String = Const.baseURL) {
         self.symbol = symbol
         self.session = URLSession(configuration: .default, delegate:nil, delegateQueue: callbackQueue)
         self.callbackQueue = callbackQueue
-        let depthURL = URL(string: Const.baseURL + symbol.rawValue + Const.depthStream)!
+        let depthURL = URL(string: baseURL + symbol.rawValue + Const.depthStream)!
         depthStream = WebSocket(url: depthURL, session: self.session!, callback: { result in
             switch result {
             case let .success(message):
@@ -71,7 +72,7 @@ class Networker: NSObject {
             }
         })
         
-        let aggTradeURL = URL(string: Const.baseURL + symbol.rawValue + Const.aggTradeStreeam)!
+        let aggTradeURL = URL(string: baseURL + symbol.rawValue + Const.aggTradeStreeam)!
         aggTradeStream = WebSocket(url: aggTradeURL, session: self.session!, callback: { result in
             switch result {
             case let .success(message):

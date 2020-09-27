@@ -12,17 +12,17 @@ struct DepthResponse: Decodable {
     private let b: Order.List
 }
 
-struct AggregatedTrade: Codable {
+struct AggregatedTrade: Decodable {
     let T: Int
     let p: String
     let q: String
 }
 
-struct DepthSnapshot: Codable {
+struct DepthSnapshot: Decodable {
     let lastUpdateId: Int
 }
 
-struct Order: Codable, Hashable {
+struct Order: Decodable, Hashable {
     let quantity: Double
     let price: Double
 }
@@ -36,7 +36,8 @@ private extension Order {
                 let container = try decoder.singleValueContainer()
                 let list = try container.decode([[String]].self)
                 values = list.compactMap { pair in
-                    guard let quantity = Double(pair[1]),
+                    guard pair.count == 2,
+                        let quantity = Double(pair[1]),
                         let price = Double(pair[0]) else {
                             return nil
                     }

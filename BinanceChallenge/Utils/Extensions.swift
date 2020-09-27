@@ -31,7 +31,7 @@ extension Data {
 }
 
 extension UILabel {
-    convenience init(text: String?,
+    convenience init(text: String? = nil,
                      textColor: UIColor = .white) {
         self.init(frame: .zero)
         self.text = text
@@ -50,6 +50,9 @@ extension UIColor {
     static var golden: UIColor { rgb(193, 172, 88) }
     static var pale: UIColor { rgb(63, 69, 78) }
     static var paleLight: UIColor { rgb(102, 106, 114) }
+    static var emerald: UIColor { rgb(94, 169, 141) }
+    static var reddish: UIColor { rgb(146, 57, 66) }
+    
     private static func rgb(_ red: CGFloat, _ green: CGFloat, _ blue: CGFloat) -> UIColor {
         UIColor(red: red/255.0, green: green/255.0, blue: blue/255.0, alpha: 1)
     }

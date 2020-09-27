@@ -21,8 +21,9 @@ class MarketHistoryViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        view.backgroundColor = .dark
+        
         view.addSubview(header)
-        header.backgroundColor = .blue
         
         collectionView.register(HistoryCell.self, forCellWithReuseIdentifier: Self.cellId)
         collectionView.dataSource = dataSource
@@ -67,9 +68,6 @@ extension MarketHistoryViewController {
         UICollectionViewDiffableDataSource(collectionView: collectionView) { cv, ip, historyRec -> UICollectionViewCell? in
             let cell = cv.dequeueReusableCell(withReuseIdentifier: Self.cellId,
                                               for: ip) as! HistoryCell
-            // TODO: configure cell
-            cell.backgroundColor = ip.item % 2 == 0 ? .gray : .magenta
-            
             cell.time = historyRec.time
             cell.price = historyRec.price
             cell.quantity = historyRec.quantity

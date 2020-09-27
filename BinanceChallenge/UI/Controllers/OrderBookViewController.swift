@@ -22,6 +22,7 @@ class OrderBookViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        view.backgroundColor = .dark
         view.addSubview(header)
         
         collectionView.register(OrderRecordCell.self, forCellWithReuseIdentifier: Self.cellId)
@@ -71,8 +72,6 @@ private extension OrderBookViewController {
         UICollectionViewDiffableDataSource(collectionView: collectionView) { cv, ip, record -> UICollectionViewCell? in
             let cell = cv.dequeueReusableCell(withReuseIdentifier: Self.cellId,
                                               for: ip) as! OrderRecordCell
-            // TODO: configure cell
-            cell.backgroundColor = ip.item % 2 == 0 ? .gray : .magenta
             
             if let bidQuantity = record.bid?.quantity {
                 cell.bidQuantity = String(bidQuantity)

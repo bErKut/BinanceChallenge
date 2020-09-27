@@ -4,6 +4,7 @@ class HistoryHeaderView: UIView {
     private enum Const {
         static let timeRelativeWidth: CGFloat = 0.3
         static let quantityRelativeWidth: CGFloat = 0.25
+        static let sideOffset: CGFloat = 16
     }
     
     private enum Strings {
@@ -15,16 +16,22 @@ class HistoryHeaderView: UIView {
     override init(frame: CGRect) {
         super.init(frame: frame)
         
-        let timeLabel = UILabel(text: Strings.time)
-        let priceLabel = UILabel(text: Strings.price)
-        let quantityLabel = UILabel(text: Strings.quantity)
+        backgroundColor = .dark
+        let timeLabel = UILabel(text: Strings.time,
+                                textColor: .pale)
+        let priceLabel = UILabel(text: Strings.price,
+                                 textColor: .pale)
+        let quantityLabel = UILabel(text: Strings.quantity,
+                                    textColor: .pale)
+        quantityLabel.textAlignment = .right
         
         for label in [timeLabel, priceLabel, quantityLabel] {
             addSubview(label)
             label.translatesAutoresizingMaskIntoConstraints = false
         }
         
-        [timeLabel.leadingAnchor.constraint(equalTo: leadingAnchor),
+        [timeLabel.leadingAnchor.constraint(equalTo: leadingAnchor,
+                                            constant: Const.sideOffset),
          timeLabel.topAnchor.constraint(equalTo: topAnchor),
          timeLabel.widthAnchor.constraint(equalTo: widthAnchor,
                                           multiplier: Const.timeRelativeWidth),
@@ -35,7 +42,8 @@ class HistoryHeaderView: UIView {
          priceLabel.widthAnchor.constraint(equalTo: timeLabel.widthAnchor),
          priceLabel.bottomAnchor.constraint(equalTo: timeLabel.bottomAnchor),
          
-         quantityLabel.trailingAnchor.constraint(equalTo: trailingAnchor),
+         quantityLabel.trailingAnchor.constraint(equalTo: trailingAnchor,
+                                                 constant: -Const.sideOffset),
          quantityLabel.topAnchor.constraint(equalTo: timeLabel.topAnchor),
          quantityLabel.bottomAnchor.constraint(equalTo: timeLabel.bottomAnchor),
          quantityLabel.widthAnchor.constraint(equalTo: widthAnchor,

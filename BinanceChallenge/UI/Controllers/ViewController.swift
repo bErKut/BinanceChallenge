@@ -22,6 +22,7 @@ class ViewController: UIViewController {
         orderBookController = OrderBookViewController(store: store)
         marketHistoryController = MarketHistoryViewController(store: store)
         super.init(nibName: nil, bundle: nil)
+        view.backgroundColor = .dark
     }
     
     override func viewDidLoad() {
