@@ -32,6 +32,8 @@ class Store {
     private enum Const {
         static let processingQueue = "com.berkut89.binancechallenge.store"
         static let historyRecordsMaxCount = 14
+        static let depthRecordsCount = 14
+        static let depthResponsesBufferSize = 10
     }
     
     private enum Symbol: String {
@@ -39,19 +41,25 @@ class Store {
     }
     
     private var lastUpdateID: Int?
-    private var lastDepthResponse: DepthResponse?
+    
+    // consider using another data structure in case if
+    // performance will be not enough (i.e. doubly linked list)
+    private var depthResponses: [DepthResponse] = []
+    
     private var historyRecords: [HistoryRecord] = []
     private var histiryRecordsMaxCapacity = Const.historyRecordsMaxCount
         
     private var networker: Networker!
     private var processingQueue: OperationQueue {
-        let operationQueue = OperationQueue()
-        operationQueue.maxConcurrentOperationCount = 1
-        operationQueue.name = Const.processingQueue
-        return operationQueue
+        let queue = OperationQueue()
+        
+        // in case of change of the queue to concurrent – take care
+        // of shared resources synchronisation
+        queue.maxConcurrentOperationCount = 1
+        queue.name = Const.processingQueue
+        return queue
     }
     private let callbackQueue: OperationQueue
-    
     var orderBookCallback: ((Result<[Record], Error>) -> Void)?
     var marketHistoryCallback: ((Result<[HistoryRecord], Error>) -> Void)?
     
@@ -76,6 +84,10 @@ class Store {
             }
         }, callbackQueue: processingQueue)
         
+        fetchDepthSnapshot()
+    }
+    
+    private func fetchDepthSnapshot() {
         networker.fetchDepthSnapshot { [weak self] result in
             switch result {
             case let .success(snapshot):
@@ -106,39 +118,60 @@ private extension Store {
     }
     
     private func handleDepth(response: DepthResponse) {
+                
         guard let lastUpdateID = lastUpdateID,
             response.u > lastUpdateID else {
             return
         }
         
-        // TODO: refactor
-        if let lastResponse = lastDepthResponse,
+        if response.U <= lastUpdateID + 1,
+            response.u >= lastUpdateID + 1 {
+                // first event
+        } else if let lastResponse = depthResponses.last,
             lastResponse.u + 1 == response.U {
                 // all subsequent events, except first
-        } else if response.U <= lastUpdateID + 1,
-            response.u >= lastUpdateID + 1 {
-                // handle case for first event
         } else {
             resync()
-            lastDepthResponse = response
             return
         }
-        
-        lastDepthResponse = response
-        
-        var records: [Record] = []
-        for i in 0..<max(response.asks.count, response.bids.count) {
-            var bidOrder: Order?
-            var askOrder: Order?
-            if i < response.bids.count {
-                bidOrder = response.bids[i]
-            }
-            if i < response.asks.count {
-                askOrder = response.asks[i]
-            }
-            records.append(Record(bid: bidOrder, ask: askOrder))
+
+        depthResponses.append(response)
+        if depthResponses.count > Const.depthResponsesBufferSize {
+            depthResponses.removeFirst()
         }
         
+        var bidOrders: [Order] = []
+        var askOrders: [Order] = []
+        var records: [Record] = []
+        
+        var iterator = depthResponses.reversed().makeIterator()
+        while bidOrders.count <= Const.depthRecordsCount,
+            askOrders.count <= Const.depthRecordsCount,
+            let resp = iterator.next() {
+                let bids = resp.bids.compactMap { bid -> Order? in
+                    bid.quantity > 0 ? bid : nil
+                }
+                bidOrders += bids[0..<min(Const.depthRecordsCount - bidOrders.count, bids.count)]
+                
+                let asks = resp.asks.compactMap { ask -> Order? in
+                    ask.quantity > 0 ? ask : nil
+                }
+                askOrders += asks[0..<min(Const.depthRecordsCount - askOrders.count, asks.count)]
+        }
+        
+        for i in 0..<max(bidOrders.count, askOrders.count) {
+            var bid: Order?
+            var ask: Order?
+            if i < bidOrders.count {
+                bid = bidOrders[i]
+            }
+            if i < askOrders.count {
+                ask = askOrders[i]
+            }
+            records.append(Record(bid: bid,
+                                  ask: ask))
+        }
+
         callbackQueue.addOperation { [weak self] in
             self?.orderBookCallback?(.success(records))
         }
@@ -168,7 +201,20 @@ private extension Store {
     }
     
     private func resync() {
-        print("resync")
-         // TODO
+        lastUpdateID = nil
+        depthResponses.removeAll()
+        fetchDepthSnapshot()
+        networker.stopListeningToDepth { [weak self] error in
+            guard error == nil else {
+                print("failed to unsubscribe from depth steam")
+                return
+            }
+            
+            self?.networker.listenToDepth(completion: { e in
+                if e != nil {
+                    print("failed to subscribe to depth stream")
+                }
+            })
+        }
     }
 }

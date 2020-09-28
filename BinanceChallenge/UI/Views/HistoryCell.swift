@@ -32,6 +32,8 @@ class HistoryCell: UICollectionViewCell {
     override init(frame: CGRect) {
         super.init(frame: frame)
         
+        contentView.backgroundColor = .dark
+        
         for label in [timeLabel, priceLabel, quantityLabel] {
             contentView.addSubview(label)
             label.translatesAutoresizingMaskIntoConstraints = false

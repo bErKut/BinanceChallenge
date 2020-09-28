@@ -36,7 +36,7 @@ class OrderRecordCell: UICollectionViewCell {
     override init(frame: CGRect) {
         super.init(frame: frame)
         
-        backgroundColor = .dark
+        contentView.backgroundColor = .dark
         configureLabels()
         
         let configureStackView: (UIStackView) -> Void = { stackView in

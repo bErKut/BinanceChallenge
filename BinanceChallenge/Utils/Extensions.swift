@@ -12,19 +12,16 @@ extension Encodable {
 }
 
 extension String {
-    func decode<T: Decodable>() -> T {
-        guard let jsonData = data(using: .utf8) else {
-            fatalError("Could not create data from string")
-        }
-        return jsonData.decode()
+    func decode<T: Decodable>() -> T? {
+        return data(using: .utf8)?.decode()
     }
 }
 
 extension Data {
-    func decode<T: Decodable>() -> T {
+    func decode<T: Decodable>() -> T? {
         let decoder = JSONDecoder()
         guard let result = try? decoder.decode(T.self, from: self) else {
-            fatalError("Could not decode json data to expected structure")
+            return nil
         }
         return result
     }
@@ -72,4 +69,29 @@ extension UIImage {
 
         self.init(data: imagePNGData)
    }
+}
+
+extension NumberFormatter {
+    private enum Const{
+        static let quantityFractionDigits = 6
+        static let groupingSeparator = " "
+        static let decimalSeparator = ","
+    }
+    
+    static let orderQuantityFormatter: NumberFormatter = {
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .decimal
+        formatter.decimalSeparator = Const.decimalSeparator
+        formatter.minimumFractionDigits = Const.quantityFractionDigits
+        formatter.maximumFractionDigits = Const.quantityFractionDigits
+        return formatter
+    }()
+    
+    static let orderPriceFormatter: NumberFormatter = {
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .decimal
+        formatter.groupingSeparator = Const.groupingSeparator
+        formatter.decimalSeparator = Const.decimalSeparator
+        return formatter
+    }()
 }

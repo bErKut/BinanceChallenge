@@ -49,3 +49,8 @@ private extension Order {
         }
     }
 }
+
+struct MessageResponse: Decodable {
+    let result: String?
+    let id: Int
+}

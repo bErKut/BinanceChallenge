@@ -8,10 +8,13 @@ private enum Const {
     static let aggTradeStreeam = "@aggTrade"
 }
 
-class Networker: NSObject {
+class Networker {
     enum NetworkerError: Error {
-        // TODO: improve error handling
         case general(Error)
+        case depth(Error)
+        case aggTrade(Error)
+        case unsubscribe
+        case subscribe
     }
         
     enum Symbol: String {
@@ -28,15 +31,21 @@ class Networker: NSObject {
         case depth = "depth"
     }
     
+    private enum RequestId: Int {
+        case unsubscribeDepth
+        case subscribeDepth
+        case `default`
+    }
+    
     private struct Message: Encodable {
         let method: String
         let params: [String]
-        let id: UInt
+        let id: Int
         
         init(method: MessageMethod,
              symbol: Symbol,
              stream: Stream,
-             id: UInt) {
+             id: Int) {
             self.method = method.rawValue
             self.params = [[symbol.rawValue,
                             stream.rawValue].joined(separator: "@")]
@@ -47,47 +56,62 @@ class Networker: NSObject {
     private var session: URLSession?
     private let callbackQueue: OperationQueue!
     
-    typealias depthCallback = (Result<DepthResponse, NetworkerError>) -> Void
-    typealias aggTradeCallback = (Result<AggregatedTrade, NetworkerError>) -> Void
+    typealias DepthCallback = (Result<DepthResponse, NetworkerError>) -> Void
+    typealias AggTradeCallback = (Result<AggregatedTrade, NetworkerError>) -> Void
+    typealias MessageCallback = (NetworkerError?) -> Void
     
-    private let depthStream: WebSocket
-    private let aggTradeStream: WebSocket
+    private let depthCallback: DepthCallback
+    private let aggTradeCallback: AggTradeCallback
+    private var unsubscribeDepthCallback: MessageCallback?
+    private var subscribeDepthCallback: MessageCallback?
+    
+    private var depthStream: WebSocket?
+    private var aggTradeStream: WebSocket?
     private let symbol: Symbol
-    
+    private let baseURL: String
+        
     init(symbol: Symbol = .btcusdt,
-         depthCallback: @escaping depthCallback,
-         aggTradeCallback: @escaping aggTradeCallback,
+         depthCallback: @escaping DepthCallback,
+         aggTradeCallback: @escaping AggTradeCallback,
          callbackQueue: OperationQueue = OperationQueue.main,
          baseURL: String = Const.baseURL) {
         self.symbol = symbol
+        self.depthCallback = depthCallback
+        self.aggTradeCallback = aggTradeCallback
         self.session = URLSession(configuration: .default, delegate:nil, delegateQueue: callbackQueue)
         self.callbackQueue = callbackQueue
-        let depthURL = URL(string: baseURL + symbol.rawValue + Const.depthStream)!
-        depthStream = WebSocket(url: depthURL, session: self.session!, callback: { result in
-            switch result {
-            case let .success(message):
-                depthCallback(.success(message.decode()))
-            case let .failure(error):
-                depthCallback(.failure(.general(error)))
-            }
-        })
+        self.baseURL = baseURL
         
-        let aggTradeURL = URL(string: baseURL + symbol.rawValue + Const.aggTradeStreeam)!
-        aggTradeStream = WebSocket(url: aggTradeURL, session: self.session!, callback: { result in
-            switch result {
-            case let .success(message):
-                aggTradeCallback(.success(message.decode()))
-            case let .failure(error):
-                aggTradeCallback(.failure(.general(error)))
-            }
-        })
-        
-        super.init()
+        start()
     }
     
-    @available(*, unavailable)
-    override init() {
-        fatalError()
+    func start() {
+        let depthURL = URL(string: baseURL + symbol.rawValue + Const.depthStream)!
+        depthStream = WebSocket(url: depthURL, session: self.session!, callback: { [weak self] result in
+            guard let self = self else { return }
+            switch result {
+            case let .success(message):
+                if let depth: DepthResponse = message.decode() {
+                    self.depthCallback(.success(depth))
+                } else if let messageResponse: MessageResponse = message.decode() {
+                    self.handle(message: messageResponse)
+                }
+            case let .failure(error):
+                self.depthCallback(.failure(.depth(error)))
+            }
+        })
+        let aggTradeURL = URL(string: baseURL + symbol.rawValue + Const.aggTradeStreeam)!
+        aggTradeStream = WebSocket(url: aggTradeURL, session: self.session!, callback: { [weak self] result in
+            guard let self = self else { return }
+            switch result {
+            case let .success(message):
+                if let aggTrade: AggregatedTrade = message.decode() {
+                    self.aggTradeCallback(.success(aggTrade))
+                }
+            case let .failure(error):
+                self.aggTradeCallback(.failure(.aggTrade(error)))
+            }
+        })
     }
     
     func fetchDepthSnapshot(completion: @escaping (Result<DepthSnapshot, Error>) -> Void) {
@@ -96,45 +120,68 @@ class Networker: NSObject {
             fatalError("Could not create depth snapshot URL. Can't proceed further")
         }
         let task = session?.dataTask(with: url, completionHandler: { data, _, error in
-            guard let data = data else {
-                completion(.failure(error!))
-                return
+            guard let data = data,
+                let snapshot: DepthSnapshot = data.decode() else {
+                    completion(.failure(error!))
+                    return
             }
             
-            completion(.success(data.decode()))
+            completion(.success(snapshot))
         })
         task?.resume()
     }
             
-    func listenToDepth() {
-          let msg = message(type: .subscribe,
-                            stream: .depth)
-          depthStream.send(msg)
+    func listenToDepth(completion: @escaping MessageCallback) {
+        subscribeDepthCallback = completion
+        let msg = message(type: .subscribe,
+                          stream: .depth,
+                          id: RequestId.subscribeDepth.rawValue)
+        depthStream?.send(msg)
     }
       
-    func stopListeningToDepth() {
+    func stopListeningToDepth(completion: @escaping MessageCallback) {
+        unsubscribeDepthCallback = completion
         let msg = message(type: .unsubscribe,
-                          stream: .depth)
-        depthStream.send(msg)
+                          stream: .depth,
+                          id: RequestId.unsubscribeDepth.rawValue)
+        depthStream?.send(msg)
     }
       
     func listenToAggregatedTrade() {
         let msg = message(type: .subscribe,
                           stream: .depth)
-        aggTradeStream.send(msg)
+        aggTradeStream?.send(msg)
     }
       
     func stopListeningToAggregatedTrade() {
         let msg = message(type: .unsubscribe,
                           stream: .aggTrade)
-        aggTradeStream.send(msg)
+        aggTradeStream?.send(msg)
     }
     
     private func message(type: MessageMethod,
-                         stream: Stream) -> String {
+                         stream: Stream,
+                         id: Int = RequestId.default.rawValue) -> String {
         return Message(method: type,
                        symbol: symbol,
                        stream: stream,
-                       id: 312).asJSONString // TODO: pass proper id
+                       id: id).asJSONString
+    }
+}
+
+extension Networker {
+    func handle(message response: MessageResponse) {
+        switch response.id {
+        case RequestId.unsubscribeDepth.rawValue:
+            let error = response.result == nil ? nil : NetworkerError.unsubscribe
+            unsubscribeDepthCallback?(error)
+            unsubscribeDepthCallback = nil
+        case RequestId.subscribeDepth.rawValue:
+            let error = response.result == nil ? nil : NetworkerError.subscribe
+            subscribeDepthCallback?(error)
+            subscribeDepthCallback = nil
+        default:
+            return
+        }
     }
 }

@@ -21,12 +21,11 @@ class MarketHistoryViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        view.backgroundColor = .dark
-        
         view.addSubview(header)
         
         collectionView.register(HistoryCell.self, forCellWithReuseIdentifier: Self.cellId)
         collectionView.dataSource = dataSource
+        collectionView.backgroundColor = .dark
         view.addSubview(collectionView)
         installConstraints()
     }

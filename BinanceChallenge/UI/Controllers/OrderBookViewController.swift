@@ -22,11 +22,11 @@ class OrderBookViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        view.backgroundColor = .dark
         view.addSubview(header)
         
         collectionView.register(OrderRecordCell.self, forCellWithReuseIdentifier: Self.cellId)
         collectionView.dataSource = dataSource
+        collectionView.backgroundColor = .dark
         view.addSubview(collectionView)
         installConstraints()
     }
@@ -74,16 +74,16 @@ private extension OrderBookViewController {
                                               for: ip) as! OrderRecordCell
             
             if let bidQuantity = record.bid?.quantity {
-                cell.bidQuantity = String(bidQuantity)
+                cell.bidQuantity = NumberFormatter.orderQuantityFormatter.string(for: bidQuantity)
             }
             if let bidPrice = record.bid?.price {
-                cell.bidPrice = String(bidPrice)
+                cell.bidPrice = NumberFormatter.orderPriceFormatter.string(for: bidPrice)
             }
             if let askPrice = record.ask?.price {
-                cell.askPrice = String(askPrice)
+                cell.askPrice = NumberFormatter.orderPriceFormatter.string(for: askPrice)
             }
             if let askQuantity = record.ask?.quantity {
-                cell.askQuantity = String(askQuantity)
+                cell.askQuantity = NumberFormatter.orderQuantityFormatter.string(for: askQuantity)
             }
 
             return cell

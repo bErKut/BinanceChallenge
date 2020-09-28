@@ -34,9 +34,9 @@ class WebSocket {
     
     private func listen() {
         connection.receive { [weak self] result in
-            defer { self?.listen() }
-            
             guard let self = self else { return }
+            defer { self.listen() }
+            
             do {
                 let message = try result.get()
                 switch message {
@@ -67,4 +67,3 @@ private extension WebSocket.WebSocketError {
     static var data = WebSocket.WebSocketError.unsupported(Const.dataIsNotSupported)
     static var unknownType = WebSocket.WebSocketError.unsupported(Const.unknownResponse)
 }
-

@@ -71,7 +71,6 @@ class OrderHeaderView: UIView {
         let insetAmount: CGFloat = 2
         precisionButton.imageEdgeInsets = UIEdgeInsets(top: 0, left: insetAmount, bottom: 0, right: -insetAmount)
         precisionButton.contentEdgeInsets = UIEdgeInsets(top: 0, left: insetAmount, bottom: 0, right: 2*insetAmount)
-
         return precisionButton
     }
 }
