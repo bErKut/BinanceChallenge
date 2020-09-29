@@ -19,7 +19,6 @@
 		A73235FF25166F7F00D26FFC /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A73235FE25166F7F00D26FFC /* ViewController.swift */; };
 		A732360425166F8300D26FFC /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A732360325166F8300D26FFC /* Assets.xcassets */; };
 		A732360725166F8300D26FFC /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = A732360525166F8300D26FFC /* LaunchScreen.storyboard */; };
-		A732361225166F8300D26FFC /* BinanceChallengeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A732361125166F8300D26FFC /* BinanceChallengeTests.swift */; };
 		A732361D251688C800D26FFC /* Store.swift in Sources */ = {isa = PBXBuildFile; fileRef = A732361C251688C800D26FFC /* Store.swift */; };
 		A732361F25174AF000D26FFC /* Networker.swift in Sources */ = {isa = PBXBuildFile; fileRef = A732361E25174AF000D26FFC /* Networker.swift */; };
 		A74C136F251C048300AF452C /* OrderHeaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A74C136E251C048300AF452C /* OrderHeaderView.swift */; };
@@ -55,8 +54,6 @@
 		A732360625166F8300D26FFC /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		A732360825166F8300D26FFC /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		A732360D25166F8300D26FFC /* BinanceChallengeTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = BinanceChallengeTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		A732361125166F8300D26FFC /* BinanceChallengeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BinanceChallengeTests.swift; sourceTree = "<group>"; };
-		A732361325166F8300D26FFC /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		A732361C251688C800D26FFC /* Store.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Store.swift; sourceTree = "<group>"; };
 		A732361E25174AF000D26FFC /* Networker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Networker.swift; sourceTree = "<group>"; };
 		A74C136E251C048300AF452C /* OrderHeaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OrderHeaderView.swift; sourceTree = "<group>"; };
@@ -105,7 +102,6 @@
 			isa = PBXGroup;
 			children = (
 				A73235F925166F7F00D26FFC /* BinanceChallenge */,
-				A732361025166F8300D26FFC /* BinanceChallengeTests */,
 				A73235F825166F7F00D26FFC /* Products */,
 			);
 			sourceTree = "<group>";
@@ -133,15 +129,6 @@
 				A732360825166F8300D26FFC /* Info.plist */,
 			);
 			path = BinanceChallenge;
-			sourceTree = "<group>";
-		};
-		A732361025166F8300D26FFC /* BinanceChallengeTests */ = {
-			isa = PBXGroup;
-			children = (
-				A732361125166F8300D26FFC /* BinanceChallengeTests.swift */,
-				A732361325166F8300D26FFC /* Info.plist */,
-			);
-			path = BinanceChallengeTests;
 			sourceTree = "<group>";
 		};
 		A73236202517B6A700D26FFC /* Network */ = {
@@ -302,7 +289,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				A732361225166F8300D26FFC /* BinanceChallengeTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -378,7 +364,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 13.5;
+				IPHONEOS_DEPLOYMENT_TARGET = 13.1;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -432,7 +418,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 13.5;
+				IPHONEOS_DEPLOYMENT_TARGET = 13.1;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				SDKROOT = iphoneos;
@@ -447,6 +433,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = L3W4AXG99Q;
 				INFOPLIST_FILE = BinanceChallenge/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -464,6 +451,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = L3W4AXG99Q;
 				INFOPLIST_FILE = BinanceChallenge/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",

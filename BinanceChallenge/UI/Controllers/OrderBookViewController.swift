@@ -1,9 +1,15 @@
 import UIKit
 
 class OrderBookViewController: UIViewController {
+    private enum Strings {
+        static let streamError = "Depth stream failed: %@"
+        static let snapshotError = "Depth snapshot fetching failed: %@"
+        static let resyncError = "Depth resync failed"
+    }
     private static let cellId = "recordCell"
     
     private lazy var collectionView = makeCollectionView()
+    private let errorView = UILabel(textColor: .golden)
     private lazy var dataSource = makeDataSource()
     private let header = OrderHeaderView()
 
@@ -24,6 +30,9 @@ class OrderBookViewController: UIViewController {
         
         view.addSubview(header)
         collectionView.dataSource = dataSource
+        errorView.textAlignment = .center
+        errorView.numberOfLines = 0
+        view.addSubview(errorView)
         view.addSubview(collectionView)
         installConstraints()
     }
@@ -36,11 +45,14 @@ class OrderBookViewController: UIViewController {
 
             switch result {
             case let .success(records):
+                self?.collectionView.isHidden = false
+                self?.errorView.isHidden = true
                 snapshot.appendSections([.records])
                 snapshot.appendItems(records)
-            case .failure(_):
-                // TODO: reflect in UI
-                snapshot.appendItems([])
+            case let .failure(error):
+                self?.collectionView.isHidden = true
+                self?.errorView.isHidden = false
+                self?.handle(error: error)
             }
 
             self?.dataSource.apply(snapshot,
@@ -83,6 +95,7 @@ private extension OrderBookViewController {
     func installConstraints() {
         header.translatesAutoresizingMaskIntoConstraints = false
         collectionView.translatesAutoresizingMaskIntoConstraints = false
+        errorView.translatesAutoresizingMaskIntoConstraints = false
         
         [header.leadingAnchor.constraint(equalTo: view.leadingAnchor),
          header.topAnchor.constraint(equalTo: view.topAnchor),
@@ -92,7 +105,25 @@ private extension OrderBookViewController {
          collectionView.leadingAnchor.constraint(equalTo: header.leadingAnchor),
          collectionView.topAnchor.constraint(equalTo: header.bottomAnchor),
          collectionView.trailingAnchor.constraint(equalTo: header.trailingAnchor),
-         collectionView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
+         collectionView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+         
+         errorView.leadingAnchor.constraint(equalTo: collectionView.leadingAnchor),
+         errorView.topAnchor.constraint(equalTo: collectionView.topAnchor),
+         errorView.trailingAnchor.constraint(equalTo: collectionView.trailingAnchor),
+         errorView.bottomAnchor.constraint(equalTo: collectionView.bottomAnchor),
         ].activate()
+    }
+    
+    func handle(error: Store.StoreError) {
+        switch error {
+        case let .depthStream(e):
+            errorView.text = String(format: Strings.streamError, e.localizedDescription)
+        case let .depthSnapshot(e):
+            errorView.text = String(format: Strings.snapshotError, e?.localizedDescription ?? "")
+        case .depthResync:
+            errorView.text = Strings.resyncError
+        case .marketHistory:
+            break
+        }
     }
 }

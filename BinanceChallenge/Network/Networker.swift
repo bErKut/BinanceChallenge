@@ -10,7 +10,7 @@ private enum Const {
 
 class Networker {
     enum NetworkerError: Error {
-        case general(Error)
+        case snapshot(Error?)
         case depth(Error)
         case aggTrade(Error)
         case unsubscribe
@@ -65,8 +65,8 @@ class Networker {
     private var unsubscribeDepthCallback: MessageCallback?
     private var subscribeDepthCallback: MessageCallback?
     
-    private var depthStream: WebSocket?
-    private var aggTradeStream: WebSocket?
+    private var depthStream: WebSocketProtocol?
+    private var aggTradeStream: WebSocketProtocol?
     private let symbol: Symbol
     private let baseURL: String
         
@@ -114,7 +114,7 @@ class Networker {
         })
     }
     
-    func fetchDepthSnapshot(completion: @escaping (Result<DepthSnapshot, Error>) -> Void) {
+    func fetchDepthSnapshot(completion: @escaping (Result<DepthSnapshot, NetworkerError>) -> Void) {
         let urlString = String(format: Const.snapshotURLFormat, symbol.rawValue.uppercased())
         guard let url = URL(string: urlString) else {
             fatalError("Could not create depth snapshot URL. Can't proceed further")
@@ -122,7 +122,7 @@ class Networker {
         let task = session?.dataTask(with: url, completionHandler: { data, _, error in
             guard let data = data,
                 let snapshot: DepthSnapshot = data.decode() else {
-                    completion(.failure(error!))
+                    completion(.failure(NetworkerError.snapshot(error)))
                     return
             }
             

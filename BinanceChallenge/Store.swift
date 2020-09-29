@@ -36,8 +36,8 @@ extension HistoryRecord: Hashable {
 class Store {
     private enum Const {
         static let processingQueue = "com.berkut89.binancechallenge.store"
-        static let historyRecordsMaxCount = 14
-        static let depthRecordsCount = 14
+        static let historyRecordsMaxCount = 20
+        static let depthRecordsCount = 20
         static let depthResponsesBufferSize = 10
     }
     
@@ -65,8 +65,16 @@ class Store {
         return queue
     }
     private let callbackQueue: OperationQueue
-    var orderBookCallback: ((Result<[Record], Error>) -> Void)?
-    var marketHistoryCallback: ((Result<[HistoryRecord], Error>) -> Void)?
+    
+    enum StoreError: Error {
+        case depthStream(Error)
+        case depthSnapshot(Error?)
+        case depthResync
+        case marketHistory(Error)
+    }
+    
+    var orderBookCallback: ((Result<[Record], StoreError>) -> Void)?
+    var marketHistoryCallback: ((Result<[HistoryRecord], StoreError>) -> Void)?
     
     init(callbackQueue: OperationQueue = .main) {
         self.callbackQueue = callbackQueue
@@ -97,9 +105,8 @@ class Store {
             switch result {
             case let .success(snapshot):
                 self?.lastUpdateID = snapshot.lastUpdateId
-            case .failure:
-                // TODO: handle
-                print("failure")
+            case let .failure(error):
+                self?.handle(error: error)
             }
         }
     }
@@ -107,19 +114,20 @@ class Store {
 
 // MARK: Handle responses
 private extension Store {
-    func handle(error: Networker.NetworkerError?) {
-//        switch error {
-//        case let .unsupported(errMsg):
-//            print(errMsg)
-//        case let .receiving(err):
-//            print(err.localizedDescription)
-//        case let .sendFailed(err):
-//            print(err.localizedDescription)
-//        case let .socketShutdown(errMsg):
-//            print(errMsg)
-//        case nil:
-//            print("")
-//        }
+    func handle(error: Networker.NetworkerError) {
+        callbackQueue.addOperation { [weak self] in
+            guard let self = self else { return }
+            switch error {
+            case let .snapshot(e):
+                self.orderBookCallback?(.failure(.depthSnapshot(e)))
+            case let .depth(e):
+                self.orderBookCallback?(.failure(.depthStream(e)))
+            case let .aggTrade(e):
+                self.orderBookCallback?(.failure(.marketHistory(e)))
+            case .unsubscribe, .subscribe:
+                self.orderBookCallback?(.failure(.depthResync))
+            }
+        }
     }
     
     private func handleDepth(response: DepthResponse) {

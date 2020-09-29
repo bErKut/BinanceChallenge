@@ -5,27 +5,33 @@ private enum Const {
     static let unknownResponse = "type of response is unknown"
 }
 
-class WebSocket {
-    enum WebSocketError: Error {
-        case unsupported(String)
-        case receiving(Error)
-        case sendFailed(Error)
-    }
+protocol WebSocketProtocol {
+    typealias WebSocketCallback = (Result<String, WebSocketError>) -> Void
     
+    init(url: URL,
+         session: URLSession,
+         callback: @escaping WebSocketCallback)
+    func send(_ message: String)
+}
+
+enum WebSocketError: Error {
+    case unsupported(String)
+    case receiving(Error)
+    case sendFailed(Error)
+}
+
+class WebSocket: WebSocketProtocol {
     private let session: URLSession
     private let connection: URLSessionWebSocketTask
     private let callback: WebSocketCallback
     
-    typealias WebSocketCallback = (Result<String, WebSocketError>) -> Void
-    
-    init(url: URL,
+    required init(url: URL,
          session: URLSession,
          callback: @escaping WebSocketCallback) {
         self.session = session
         connection = session.webSocketTask(with: url)
         self.callback = callback
         listen()
-        connection.resume()
     }
     
     deinit {
@@ -43,9 +49,11 @@ class WebSocket {
                 case let .string(string):
                     self.callback(.success(string))
                 case .data:
-                    self.callback(.failure(.data))
+                    // was not able to figure out how to configure
+                    // to recive data instead of strings (seems it isn't supported)
+                    self.callback(.failure(WebSocketError.data))
                 @unknown default:
-                    self.callback(.failure(.unknownType))
+                    self.callback(.failure(WebSocketError.unknownType))
                 }
             } catch {
                 self.callback(.failure(.receiving(error)))
@@ -63,7 +71,7 @@ class WebSocket {
     }
 }
 
-private extension WebSocket.WebSocketError {
-    static var data = WebSocket.WebSocketError.unsupported(Const.dataIsNotSupported)
-    static var unknownType = WebSocket.WebSocketError.unsupported(Const.unknownResponse)
+private extension WebSocketError {
+    static var data = unsupported(Const.dataIsNotSupported)
+    static var unknownType = unsupported(Const.unknownResponse)
 }

@@ -40,7 +40,7 @@ class ViewController: UIViewController {
     
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        contentViewController.view.frame = self.view.bounds
+        contentViewController.view.frame = self.contentView.bounds
     }
     
     override var preferredStatusBarStyle: UIStatusBarStyle {

@@ -1,8 +1,14 @@
 import UIKit
 
 class MarketHistoryViewController: UIViewController {
+    private enum Strings {
+        static let streamError = "AggTrade stream failed: %@"
+    }
+
     private static let cellId = "historyCell"
+    
     private lazy var collectionView = makeCollectionView()
+    private let errorView = UILabel(textColor: .golden)
     private lazy var dataSource = makeDataSource()
     private let header = HistoryHeaderView()
 
@@ -24,6 +30,9 @@ class MarketHistoryViewController: UIViewController {
         view.addSubview(header)
         collectionView.dataSource = dataSource
         view.addSubview(collectionView)
+        errorView.textAlignment = .center
+        errorView.numberOfLines = 0
+        view.addSubview(errorView)
         installConstraints()
     }
     
@@ -34,10 +43,14 @@ class MarketHistoryViewController: UIViewController {
             var snapshot = NSDiffableDataSourceSnapshot<Section, HistoryRecord>()
             switch result {
             case let .success(records):
+                self?.collectionView.isHidden = false
+                self?.errorView.isHidden = true
                 snapshot.appendSections([.history])
                 snapshot.appendItems(records)
-            case .failure:
-                snapshot.appendItems([])
+            case let .failure(error):
+                self?.collectionView.isHidden = true
+                self?.errorView.isHidden = false
+                self?.handle(error: error)
             }
             self?.dataSource.apply(snapshot, animatingDifferences: false)
         }
@@ -89,5 +102,11 @@ extension MarketHistoryViewController {
          collectionView.trailingAnchor.constraint(equalTo: header.trailingAnchor),
          collectionView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
         ].activate()
+    }
+    
+    func handle(error: Store.StoreError) {
+        if case let Store.StoreError.marketHistory(e) = error {
+            errorView.text = String(format: Strings.streamError, e.localizedDescription)
+        }
     }
 }
