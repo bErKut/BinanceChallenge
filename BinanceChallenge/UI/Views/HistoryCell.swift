@@ -20,6 +20,11 @@ class HistoryCell: UICollectionViewCell {
         set { priceLabel.text = newValue }
     }
     
+    var priceColor: UIColor {
+        get { priceLabel.textColor }
+        set { priceLabel.textColor = newValue }
+    }
+    
     var quantity: String? {
         get { quantityLabel.text }
         set { quantityLabel.text = newValue}
@@ -39,6 +44,8 @@ class HistoryCell: UICollectionViewCell {
             label.translatesAutoresizingMaskIntoConstraints = false
             label.font = Const.font
         }
+        
+        quantityLabel.textAlignment = .right
         
         [timeLabel.leadingAnchor.constraint(equalTo: leadingAnchor,
                                             constant: Const.sideOffset),

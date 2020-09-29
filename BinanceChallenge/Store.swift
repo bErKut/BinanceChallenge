@@ -12,9 +12,14 @@ extension Record: Hashable {
 }
 
 struct HistoryRecord {
-    let time: String
-    let price: String
-    let quantity: String
+    enum PriceChange {
+        case raise
+        case fall
+    }
+    let time: Int
+    let price: Double
+    let quantity: Double
+    let priceChange: PriceChange
     private let uuid = UUID()
 }
 
@@ -142,7 +147,6 @@ private extension Store {
         
         var bidOrders: [Order] = []
         var askOrders: [Order] = []
-        var records: [Record] = []
         
         var iterator = depthResponses.reversed().makeIterator()
         while bidOrders.count <= Const.depthRecordsCount,
@@ -159,39 +163,52 @@ private extension Store {
                 askOrders += asks[0..<min(Const.depthRecordsCount - askOrders.count, asks.count)]
         }
         
-        for i in 0..<max(bidOrders.count, askOrders.count) {
-            var bid: Order?
-            var ask: Order?
-            if i < bidOrders.count {
-                bid = bidOrders[i]
-            }
-            if i < askOrders.count {
-                ask = askOrders[i]
-            }
-            records.append(Record(bid: bid,
-                                  ask: ask))
-        }
+        let records = depthRecords(from: bidOrders, asks: askOrders)
 
         callbackQueue.addOperation { [weak self] in
             self?.orderBookCallback?(.success(records))
         }
     }
     
+    private func depthRecords(from bids: [Order], asks: [Order]) -> [Record] {
+        var records: [Record] = []
+        for i in 0..<max(bids.count, asks.count) {
+            var bid: Order?
+            var ask: Order?
+            if i < bids.count {
+                bid = bids[i]
+            }
+            if i < asks.count {
+                ask = asks[i]
+            }
+            records.append(Record(bid: bid,
+                                  ask: ask))
+        }
+        return records
+    }
+    
     private func handleAggTrade(answer: AggregatedTrade) {
-        let formatter = DateComponentsFormatter()
-        formatter.allowedUnits = [.hour, .minute, .second]
-        formatter.unitsStyle = .positional
-        let date = Date(timeIntervalSince1970: TimeInterval(answer.T/1_000))
-        let components = Calendar.current.dateComponents([.hour, .minute, .second], from: date)
-        guard let timeString = formatter.string(from: components) else { return }
-        let record = HistoryRecord(time: timeString,
-                                   price: answer.p,
-                                   quantity: answer.q)
+        guard let price = Double(answer.p),
+            let quantity = Double(answer.q) else {
+            print("AggTrade: price or quantity parsing failure")
+            return
+        }
+        
+        
+        var priceChange = HistoryRecord.PriceChange.raise
+        if let topRecord = historyRecords.first,
+            price > topRecord.price {
+            priceChange = .fall
+        }
+        let record = HistoryRecord(time: answer.T,
+                                   price: price,
+                                   quantity: quantity,
+                                   priceChange: priceChange)
         
         var records = historyRecords
         records.insert(record, at: 0)
         if records.count > histiryRecordsMaxCapacity {
-            records = records.dropLast()
+            records.removeLast()
         }
         historyRecords = records
         

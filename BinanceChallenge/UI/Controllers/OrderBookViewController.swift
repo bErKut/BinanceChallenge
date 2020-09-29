@@ -23,10 +23,7 @@ class OrderBookViewController: UIViewController {
         super.viewDidLoad()
         
         view.addSubview(header)
-        
-        collectionView.register(OrderRecordCell.self, forCellWithReuseIdentifier: Self.cellId)
         collectionView.dataSource = dataSource
-        collectionView.backgroundColor = .dark
         view.addSubview(collectionView)
         installConstraints()
     }
@@ -53,7 +50,6 @@ class OrderBookViewController: UIViewController {
     
     override func viewWillDisappear(_ animated: Bool) {
         store.orderBookCallback = nil
-        
         super.viewWillDisappear(animated)
     }
 }
@@ -61,7 +57,6 @@ class OrderBookViewController: UIViewController {
 private extension OrderBookViewController {
     private enum Const {
         static let headerHeight: CGFloat = 28
-        static let cellHeight: CGFloat = 28
     }
     
     enum Section: Int {
@@ -72,44 +67,17 @@ private extension OrderBookViewController {
         UICollectionViewDiffableDataSource(collectionView: collectionView) { cv, ip, record -> UICollectionViewCell? in
             let cell = cv.dequeueReusableCell(withReuseIdentifier: Self.cellId,
                                               for: ip) as! OrderRecordCell
-            
-            if let bidQuantity = record.bid?.quantity {
-                cell.bidQuantity = NumberFormatter.orderQuantityFormatter.string(for: bidQuantity)
-            }
-            if let bidPrice = record.bid?.price {
-                cell.bidPrice = NumberFormatter.orderPriceFormatter.string(for: bidPrice)
-            }
-            if let askPrice = record.ask?.price {
-                cell.askPrice = NumberFormatter.orderPriceFormatter.string(for: askPrice)
-            }
-            if let askQuantity = record.ask?.quantity {
-                cell.askQuantity = NumberFormatter.orderQuantityFormatter.string(for: askQuantity)
-            }
-
+            cell.configure(with: record)
             return cell
         }
     }
-    
-    func makeListLayoutSection() -> NSCollectionLayoutSection {
-        let item = NSCollectionLayoutItem(layoutSize: NSCollectionLayoutSize(
-            widthDimension: .fractionalWidth(1),
-            heightDimension: .fractionalHeight(1)
-        ))
-        let group = NSCollectionLayoutGroup.vertical(
-            layoutSize: NSCollectionLayoutSize(
-                widthDimension: .fractionalWidth(1),
-                heightDimension: .absolute(Const.cellHeight)
-            ),
-            subitems: [item]
-        )
         
-        return NSCollectionLayoutSection(group: group)
-    }
-    
     func makeCollectionView() -> UICollectionView {
-        let layout = UICollectionViewCompositionalLayout(section: makeListLayoutSection())
-        return UICollectionView(frame: .zero,
-                                collectionViewLayout: layout)
+        let cv = UICollectionView(frame: .zero,
+                                  collectionViewLayout: UICollectionViewCompositionalLayout.list)
+        cv.register(OrderRecordCell.self, forCellWithReuseIdentifier: Self.cellId)
+        cv.backgroundColor = .dark
+        return cv
     }
     
     func installConstraints() {

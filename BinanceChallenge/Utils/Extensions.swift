@@ -72,13 +72,13 @@ extension UIImage {
 }
 
 extension NumberFormatter {
-    private enum Const{
+    private enum Const {
         static let quantityFractionDigits = 6
         static let groupingSeparator = " "
         static let decimalSeparator = ","
     }
     
-    static let orderQuantityFormatter: NumberFormatter = {
+    static let quantityFormatter: NumberFormatter = {
         let formatter = NumberFormatter()
         formatter.numberStyle = .decimal
         formatter.decimalSeparator = Const.decimalSeparator
@@ -87,11 +87,42 @@ extension NumberFormatter {
         return formatter
     }()
     
-    static let orderPriceFormatter: NumberFormatter = {
+    static let priceFormatter: NumberFormatter = {
         let formatter = NumberFormatter()
         formatter.numberStyle = .decimal
         formatter.groupingSeparator = Const.groupingSeparator
         formatter.decimalSeparator = Const.decimalSeparator
         return formatter
     }()
+}
+
+extension DateComponentsFormatter {
+    static let time: DateComponentsFormatter = {
+        let formatter = DateComponentsFormatter()
+        formatter.allowedUnits = [.hour, .minute, .second]
+        formatter.unitsStyle = .positional
+        return formatter
+    }()
+}
+
+extension UICollectionViewCompositionalLayout {
+    private enum Const {
+        static let cellHeight: CGFloat = 28
+    }
+    static var list: UICollectionViewCompositionalLayout {
+        let item = NSCollectionLayoutItem(layoutSize: NSCollectionLayoutSize(
+            widthDimension: .fractionalWidth(1),
+            heightDimension: .fractionalHeight(1)
+        ))
+        let group = NSCollectionLayoutGroup.vertical(
+            layoutSize: NSCollectionLayoutSize(
+                widthDimension: .fractionalWidth(1),
+                heightDimension: .absolute(Const.cellHeight)
+            ),
+            subitems: [item]
+        )
+        
+        let section = NSCollectionLayoutSection(group: group)
+        return UICollectionViewCompositionalLayout(section: section)
+    }
 }

@@ -22,10 +22,7 @@ class MarketHistoryViewController: UIViewController {
         super.viewDidLoad()
         
         view.addSubview(header)
-        
-        collectionView.register(HistoryCell.self, forCellWithReuseIdentifier: Self.cellId)
         collectionView.dataSource = dataSource
-        collectionView.backgroundColor = .dark
         view.addSubview(collectionView)
         installConstraints()
     }
@@ -48,7 +45,6 @@ class MarketHistoryViewController: UIViewController {
     
     override func viewWillDisappear(_ animated: Bool) {
         store.marketHistoryCallback = nil
-        
         super.viewDidDisappear(animated)
     }
 }
@@ -56,7 +52,6 @@ class MarketHistoryViewController: UIViewController {
 extension MarketHistoryViewController {
     private enum Const {
         static let headerHeight: CGFloat = 28
-        static let cellHeight: CGFloat = 28
     }
 
     enum Section: Int {
@@ -64,37 +59,20 @@ extension MarketHistoryViewController {
     }
     
     func makeDataSource() -> UICollectionViewDiffableDataSource<Section, HistoryRecord> {
-        UICollectionViewDiffableDataSource(collectionView: collectionView) { cv, ip, historyRec -> UICollectionViewCell? in
+        UICollectionViewDiffableDataSource(collectionView: collectionView) { cv, ip, rec -> UICollectionViewCell? in
             let cell = cv.dequeueReusableCell(withReuseIdentifier: Self.cellId,
                                               for: ip) as! HistoryCell
-            cell.time = historyRec.time
-            cell.price = historyRec.price
-            cell.quantity = historyRec.quantity
-
+            cell.configure(with: rec)
             return cell
         }
     }
     
-    func makeListLayoutSection() -> NSCollectionLayoutSection {
-        let item = NSCollectionLayoutItem(layoutSize: NSCollectionLayoutSize(
-            widthDimension: .fractionalWidth(1),
-            heightDimension: .fractionalHeight(1)
-        ))
-        let group = NSCollectionLayoutGroup.vertical(
-            layoutSize: NSCollectionLayoutSize(
-                widthDimension: .fractionalWidth(1),
-                heightDimension: .absolute(Const.cellHeight)
-            ),
-            subitems: [item]
-        )
-        
-        return NSCollectionLayoutSection(group: group)
-    }
-    
     func makeCollectionView() -> UICollectionView {
-        let layout = UICollectionViewCompositionalLayout(section: makeListLayoutSection())
-        return UICollectionView(frame: .zero,
-                                collectionViewLayout: layout)
+        let cv = UICollectionView(frame: .zero,
+                                  collectionViewLayout: UICollectionViewCompositionalLayout.list)
+        cv.register(HistoryCell.self, forCellWithReuseIdentifier: Self.cellId)
+        cv.backgroundColor = .dark
+        return cv
     }
     
     func installConstraints() {
@@ -112,5 +90,4 @@ extension MarketHistoryViewController {
          collectionView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
         ].activate()
     }
-
 }
