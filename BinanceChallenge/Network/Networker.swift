@@ -1,14 +1,14 @@
 import Foundation
 
-private enum Const {
-    static let workerQueueName = "com.berkut89.binancechallenge.networker"
-    static let baseURL = "wss://stream.binance.com:9443/ws/"
-    static let snapshotURLFormat = "https://www.binance.com/api/v1/depth?symbol=%@&limit=1000"
-    static let depthStream = "@depth"
-    static let aggTradeStreeam = "@aggTrade"
-}
-
 class Networker {
+    private enum Const {
+        static let workerQueueName = "com.berkut89.binancechallenge.networker"
+        static let baseURL = "wss://stream.binance.com:9443/ws/"
+        static let snapshotURLFormat = "https://www.binance.com/api/v1/depth?symbol=%@&limit=1000"
+        static let depthStream = "@depth"
+        static let aggTradeStreeam = "@aggTrade"
+    }
+
     enum NetworkerError: Error {
         case snapshot(Error?)
         case depth(Error)
@@ -53,7 +53,7 @@ class Networker {
         }
     }
     
-    private var session: URLSession?
+    private var session: URLSession
     private let callbackQueue: OperationQueue!
     
     typealias DepthCallback = (Result<DepthResponse, NetworkerError>) -> Void
@@ -78,7 +78,7 @@ class Networker {
         self.symbol = symbol
         self.depthCallback = depthCallback
         self.aggTradeCallback = aggTradeCallback
-        self.session = URLSession(configuration: .default, delegate:nil, delegateQueue: callbackQueue)
+        self.session = URLSession(configuration: .default, delegate: nil, delegateQueue: callbackQueue)
         self.callbackQueue = callbackQueue
         self.baseURL = baseURL
         
@@ -87,7 +87,7 @@ class Networker {
     
     func start() {
         let depthURL = URL(string: baseURL + symbol.rawValue + Const.depthStream)!
-        depthStream = WebSocket(url: depthURL, session: self.session!, callback: { [weak self] result in
+        depthStream = WebSocket(url: depthURL, session: self.session, callback: { [weak self] result in
             guard let self = self else { return }
             switch result {
             case let .success(message):
@@ -101,7 +101,7 @@ class Networker {
             }
         })
         let aggTradeURL = URL(string: baseURL + symbol.rawValue + Const.aggTradeStreeam)!
-        aggTradeStream = WebSocket(url: aggTradeURL, session: self.session!, callback: { [weak self] result in
+        aggTradeStream = WebSocket(url: aggTradeURL, session: self.session, callback: { [weak self] result in
             guard let self = self else { return }
             switch result {
             case let .success(message):
@@ -119,7 +119,7 @@ class Networker {
         guard let url = URL(string: urlString) else {
             fatalError("Could not create depth snapshot URL. Can't proceed further")
         }
-        let task = session?.dataTask(with: url, completionHandler: { data, _, error in
+        let task = session.dataTask(with: url, completionHandler: { data, _, error in
             guard let data = data,
                 let snapshot: DepthSnapshot = data.decode() else {
                     completion(.failure(NetworkerError.snapshot(error)))
@@ -128,7 +128,7 @@ class Networker {
             
             completion(.success(snapshot))
         })
-        task?.resume()
+        task.resume()
     }
             
     func listenToDepth(completion: @escaping MessageCallback) {

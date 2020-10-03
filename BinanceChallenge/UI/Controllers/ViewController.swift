@@ -35,7 +35,7 @@ class ViewController: UIViewController {
                                    for: .valueChanged)
         view.addSubview(contentView)
         configureUI()
-        let _ = store.start()
+        store.start()
     }
     
     override func viewDidAppear(_ animated: Bool) {

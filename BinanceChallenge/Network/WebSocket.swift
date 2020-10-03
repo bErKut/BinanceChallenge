@@ -25,9 +25,7 @@ class WebSocket: WebSocketProtocol {
     private let connection: URLSessionWebSocketTask
     private let callback: WebSocketCallback
     
-    required init(url: URL,
-         session: URLSession,
-         callback: @escaping WebSocketCallback) {
+    required init(url: URL, session: URLSession, callback: @escaping WebSocketCallback) {
         self.session = session
         connection = session.webSocketTask(with: url)
         self.callback = callback

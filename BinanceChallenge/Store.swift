@@ -41,10 +41,6 @@ class Store {
         static let depthResponsesBufferSize = 10
     }
     
-    private enum Symbol: String {
-        case btcusdt = "btcusdt"
-    }
-    
     private var lastUpdateID: Int?
     
     // consider using another data structure in case if
